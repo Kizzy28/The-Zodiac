@@ -1,9 +1,3 @@
-// Widget tests for the Star Signs app.
-//
-// Place this file at test/widget_test.dart in your Flutter project
-// (replacing the default one), and make sure the import below matches
-// your actual package name from pubspec.yaml.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -22,7 +16,13 @@ void main() {
 
   testWidgets('All 12 zodiac signs are listed with symbol and date range',
       (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 3600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(const ZodiacApp());
+    await tester.pumpAndSettle();
 
     for (final sign in zodiacSigns) {
       expect(find.text(sign.name), findsOneWidget);
@@ -91,21 +91,16 @@ void main() {
       (WidgetTester tester) async {
     await tester.pumpWidget(const ZodiacApp());
 
-    // Open the date picker.
     await tester.tap(find.text('Pick your birthday'));
     await tester.pumpAndSettle();
 
-    // The date picker dialog should now be visible.
     expect(find.byType(DatePickerDialog), findsOneWidget);
 
-    // Confirm today's date (or whatever default is highlighted) via the OK button.
     final okButton = find.text('OK');
     expect(okButton, findsOneWidget);
     await tester.tap(okButton);
     await tester.pumpAndSettle();
 
-    // After picking, some sign's symbol/name/element should now be shown
-    // in the result card (in addition to the list below).
     final expectedSign = signForDate(DateTime.now().month, DateTime.now().day);
     expect(find.text(expectedSign.symbol), findsWidgets);
     expect(find.textContaining(expectedSign.element), findsWidgets);
