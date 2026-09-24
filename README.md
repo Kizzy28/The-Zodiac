@@ -1,4 +1,4 @@
-# The-Zodiac
+# The_Zodiac
 A simlpe app that lets you know which star sign you are based on your birthday and also lets you brose the date ranges for all 12 signs.
 
 ## Feaures
