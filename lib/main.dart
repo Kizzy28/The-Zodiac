@@ -1,6 +1,85 @@
+// core Flutter primitives
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:rxdart/rxdart.dart';
 
-void main() {
+// Passes incoming FCM messages from the event handler to the UI.
+final _messageStreamController = BehaviorSubject<RemoteMessage>();
+
+// Background message handler must be a top-level function.
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  if (kDebugMode) {
+    print('Handling a background message: ${message.messageId}');
+    print('Message data: ${message.data}');
+    print('Message notification: ${message.notification?.title}');
+    print('Message notification: ${message.notification?.body}');
+  }
+}
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  final messaging = FirebaseMessaging.instance;
+
+  // Request permission to show notifications.
+  final settings = await messaging.requestPermission(
+    alert: true,
+    announcement: false,
+    badge: true,
+    carPlay: false,
+    criticalAlert: false,
+    provisional: false,
+    sound: true,
+  );
+
+  if (kDebugMode) {
+    print('Permission granted: ${settings.authorizationStatus}');
+  }
+
+  String? token;
+  if (kIsWeb) {
+    const vapidKey = 'BPgu3rKWY1M27RHb4bCs-ZTPaGp0vA0Uf1twmNdS59wnlqvkel3ENDqNRNDYPlcNrfqiPmLJnluR9sjR5r8HbjU';
+    token = await messaging.getToken(vapidKey: vapidKey);
+  } else {
+    token = await messaging.getToken();
+  }
+
+  if (kDebugMode) {
+    print('Registration Token=$token');
+  }
+
+  // Foreground message handler.
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    if (kDebugMode) {
+      print('Handling a foreground message: ${message.messageId}');
+      print('Message data: ${message.data}');
+      print('Message notification: ${message.notification?.title}');
+      print('Message notification: ${message.notification?.body}');
+    }
+
+    _messageStreamController.sink.add(message);
+  });
+
+  // Background message handler.
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // subscribeToTopic() isn't supported on web — only call it on other platforms.
+  if (!kIsWeb) {
+    const topic = 'app_promotion';
+    await messaging.subscribeToTopic(topic);
+  }
+
   runApp(const ZodiacApp());
 }
 
@@ -91,6 +170,22 @@ class ZodiacPage extends StatefulWidget {
 
 class _ZodiacPageState extends State<ZodiacPage> {
   DateTime? _pickedDate;
+  String _lastMessage = '';
+
+  _ZodiacPageState() {
+    // Listen for incoming FCM messages and surface the latest one in the UI.
+    _messageStreamController.listen((message) {
+      setState(() {
+        if (message.notification != null) {
+          _lastMessage = 'Received a notification:'
+              '\nTitle=${message.notification?.title},'
+              '\nBody=${message.notification?.body}';
+        } else {
+          _lastMessage = 'Received a data message: ${message.data}';
+        }
+      });
+    });
+  }
 
   ZodiacSign? get _resultSign => _pickedDate == null
       ? null
@@ -179,6 +274,13 @@ class _ZodiacPageState extends State<ZodiacPage> {
                             ),
                           ],
                         ),
+                      ),
+                    ],
+                    if (_lastMessage.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        _lastMessage,
+                        style: const TextStyle(color: Colors.white60, fontSize: 12),
                       ),
                     ],
                   ],
