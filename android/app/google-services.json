@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "734054227626",
+    "project_id": "elective-project-1",
+    "storage_bucket": "elective-project-1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:734054227626:android:02dc0ee8b7ffec2d5afad3",
+        "android_client_info": {
+          "package_name": "com.example.kizz_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCS-iGucjPrjFz548YuFMRjUsaOodaTuRo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
