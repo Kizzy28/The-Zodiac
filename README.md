@@ -78,3 +78,6 @@ test/
 - Add daily horoscope text per sign (would need a data source or API).
 - Persist the picked birthday with `shared_preferences` so it's remembered between launches.
 - Add compatibility matching between two signs.
+
+## Verification code:
+WTC-B7866NAF
